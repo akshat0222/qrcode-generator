@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        #qr-code-img { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Enter Link to Generate QR Code</h2>
+    <form id="qr-form">
+        <input type="url" id="link-input" placeholder="e.g., https://yourlink.com" required size="50">
+        <button type="submit">Generate QR Code</button>
+    </form>
+
+    <div id="qr-code-container">
+        <img id="qr-code-img" src="" alt="Generated QR Code" style="display: none;">
+    </div>
+
+    <script>
+        document.getElementById('qr-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const link = document.getElementById('link-input').value;
+            const qrImg = document.getElementById('qr-code-img');
+            const backendUrl = 'http://localhost:8000/generate-qr'; // **UPDATE THIS TO YOUR BACKEND URL**
+
+            try {
+                // Send the link to the backend
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: link })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Assuming the backend returns the QR code image as a Base64 string in a JSON field "qr_code"
+                const result = await response.json();
+                const base64Image = result.qr_code;
+
+                // Display the image
+                qrImg.src = `data:image/png;base64,${base64Image}`;
+                qrImg.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                alert('Failed to generate QR code. Check console for details.');
+                qrImg.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
